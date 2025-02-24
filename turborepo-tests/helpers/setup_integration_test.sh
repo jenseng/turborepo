@@ -32,6 +32,17 @@ THIS_DIR=$(dirname "${BASH_SOURCE[0]}")
 MONOREPO_ROOT_DIR="$THIS_DIR/../.."
 TURBOREPO_TESTS_DIR="${MONOREPO_ROOT_DIR}/turborepo-tests"
 
+export ORIGINAL_PATH="$PATH"
+export ORIGINAL_CWD="$(pwd)"
+export ORIGINAL_PRYSK_TEMP="$PRYSK_TEMP"
+if [[ "$OSTYPE" == "msys" ]]; then
+  # Convert CWD and PRYSK_TEMP from DOS short paths to a full POSIX paths so that:
+  # - they can be used to construct PATH entries (no C:\..., since : is the PATH separator)
+  # - resolved bins have correct casing for prysk tests, e.g. /tmp/.../npm.cmd instead of C:\Users\RUNNER~1\.../npm.CMD
+  cd "$(cygpath -au "$(pwd)")"
+  if [[ -n $PRYSK_TEMP ]]; then export PRYSK_TEMP="$(cygpath -au "$PRYSK_TEMP")"; fi
+fi
+
 TARGET_DIR="$(pwd)"
 
 # on macos, using the tmp dir set by prysk can fail, so set it
@@ -43,7 +54,7 @@ fi
 
 "${TURBOREPO_TESTS_DIR}/helpers/copy_fixture.sh" "${TARGET_DIR}" "${FIXTURE_NAME}" "${TURBOREPO_TESTS_DIR}/integration/fixtures"
 "${TURBOREPO_TESTS_DIR}/helpers/setup_git.sh" "${TARGET_DIR}"
-"${TURBOREPO_TESTS_DIR}/helpers/setup_package_manager.sh" "${TARGET_DIR}" "$PACKAGE_MANAGER"
+. "${TURBOREPO_TESTS_DIR}/helpers/setup_package_manager.sh" "${TARGET_DIR}" "$PACKAGE_MANAGER"
 if $INSTALL_DEPS; then
   "${TURBOREPO_TESTS_DIR}/helpers/install_deps.sh" "$PACKAGE_MANAGER"
 fi
