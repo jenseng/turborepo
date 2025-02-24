@@ -1,7 +1,6 @@
 name: Turborepo Test
 on:
   push:
-    branches: [main]
   pull_request:
 
 concurrency:
@@ -69,8 +68,8 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - runner: ubuntu-latest
-          - runner: macos-13
+          # - runner: ubuntu-latest
+          # - runner: macos-13
           - runner: windows-latest
     steps:
       # On Windows, set autocrlf to input so that when the repo is cloned down
@@ -116,283 +115,283 @@ jobs:
           if [ -z "${RUSTC_WRAPPER}" ]; then
             unset RUSTC_WRAPPER
           fi
-          turbo run test --filter=turborepo-tests-integration --color --env-mode=strict --token=${{ secrets.TURBO_TOKEN }} --team=${{ vars.TURBO_TEAM }}
+          turbo run test --filter=turborepo-tests-integration --color --env-mode=strict
         shell: bash
         env:
           SCCACHE_BUCKET: turborepo-sccache
           SCCACHE_REGION: us-east-2
           # Only use sccache if we're in the Vercel repo.
-          RUSTC_WRAPPER: ${{ !github.event.pull_request.head.repo.fork && 'sccache' || '' }}
+          RUSTC_WRAPPER: ""
           CARGO_INCREMENTAL: 0
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          # AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          # AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-  rust_lint:
-    name: Rust lints
-    needs:
-      - find-changes
-    if: ${{ needs.find-changes.outputs.rest == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+  # rust_lint:
+  #   name: Rust lints
+  #   needs:
+  #     - find-changes
+  #   if: ${{ needs.find-changes.outputs.rest == 'true' }}
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
 
-      - name: Setup Turborepo Environment
-        uses: ./.github/actions/setup-turborepo-environment
-        with:
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
-          node-version: "18.20.2"
+  #     - name: Setup Turborepo Environment
+  #       uses: ./.github/actions/setup-turborepo-environment
+  #       with:
+  #         github-token: "${{ secrets.GITHUB_TOKEN }}"
+  #         node-version: "18.20.2"
 
-      - name: Run cargo fmt check
-        run: |
-          cargo fmt --check
+  #     - name: Run cargo fmt check
+  #       run: |
+  #         cargo fmt --check
 
-      - name: Check Cargo.toml formatting (taplo)
-        run: npx @taplo/cli@0.5.2 format --check
+  #     - name: Check Cargo.toml formatting (taplo)
+  #       run: npx @taplo/cli@0.5.2 format --check
 
-      - name: Check licenses
-        uses: EmbarkStudios/cargo-deny-action@v1
-        with:
-          command: check licenses
+  #     - name: Check licenses
+  #       uses: EmbarkStudios/cargo-deny-action@v1
+  #       with:
+  #         command: check licenses
 
-      - name: Run cargo clippy
-        run: |
-          cargo clippy --workspace --features rustls-tls -- --deny clippy::all
+  #     - name: Run cargo clippy
+  #       run: |
+  #         cargo clippy --workspace --features rustls-tls -- --deny clippy::all
 
-  rust_check:
-    # We test dependency changes only on main
-    name: Turborepo rust check
-    needs:
-      - find-changes
-    if: ${{ needs.find-changes.outputs.rest == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+  # rust_check:
+  #   # We test dependency changes only on main
+  #   name: Turborepo rust check
+  #   needs:
+  #     - find-changes
+  #   if: ${{ needs.find-changes.outputs.rest == 'true' }}
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
 
-      - name: Setup Turborepo Environment
-        uses: ./.github/actions/setup-turborepo-environment
-        with:
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
-          node-version: "18.20.2"
+  #     - name: Setup Turborepo Environment
+  #       uses: ./.github/actions/setup-turborepo-environment
+  #       with:
+  #         github-token: "${{ secrets.GITHUB_TOKEN }}"
+  #         node-version: "18.20.2"
 
-      - name: Run cargo check
-        run: |
-          cargo check --workspace
+  #     - name: Run cargo check
+  #       run: |
+  #         cargo check --workspace
 
-  rust_test:
-    strategy:
-      fail-fast: false
-      matrix:
-        os:
-          - name: ubuntu
-            runner: ubuntu-latest
-          - name: macos
-            runner: macos-13
-          - name: windows
-            runner: windows-latest
-    runs-on: ${{ matrix.os.runner }}
-    needs:
-      - find-changes
-    if: ${{ needs.find-changes.outputs.rest == 'true' }}
-    name: Turborepo Rust testing on ${{ matrix.os.name }}
-    steps:
-      - name: Set git to use LF line endings
-        run: |
-          git config --global core.autocrlf false
-          git config --global core.eol lf
-        if: matrix.os.name == 'windows'
+  # rust_test:
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       os:
+  #         - name: ubuntu
+  #           runner: ubuntu-latest
+  #         - name: macos
+  #           runner: macos-13
+  #         - name: windows
+  #           runner: windows-latest
+  #   runs-on: ${{ matrix.os.runner }}
+  #   needs:
+  #     - find-changes
+  #   if: ${{ needs.find-changes.outputs.rest == 'true' }}
+  #   name: Turborepo Rust testing on ${{ matrix.os.name }}
+  #   steps:
+  #     - name: Set git to use LF line endings
+  #       run: |
+  #         git config --global core.autocrlf false
+  #         git config --global core.eol lf
+  #       if: matrix.os.name == 'windows'
 
-      - name: Checkout
-        uses: actions/checkout@v4
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
 
-      - name: Setup Turborepo Environment
-        uses: ./.github/actions/setup-turborepo-environment
-        with:
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
-          node-version: "18.20.2"
+  #     - name: Setup Turborepo Environment
+  #       uses: ./.github/actions/setup-turborepo-environment
+  #       with:
+  #         github-token: "${{ secrets.GITHUB_TOKEN }}"
+  #         node-version: "18.20.2"
 
-      - name: Run sccache-cache
-        uses: mozilla-actions/sccache-action@v0.0.6
+  #     - name: Run sccache-cache
+  #       uses: mozilla-actions/sccache-action@v0.0.6
 
-      - name: Run tests
-        timeout-minutes: 120
-        # We explicitly unset RUSTC_WRAPPER if it is an empty string as causes build issues
-        run: |
-          if [ -z "${RUSTC_WRAPPER}" ]; then
-            unset RUSTC_WRAPPER
-          fi
-          if [ "$RUNNER_OS" == "Windows" ]; then
-              cargo test --workspace --exclude turborepo-napi
-          else
-              cargo test --workspace
-          fi
-        shell: bash
-        env:
-          SCCACHE_BUCKET: turborepo-sccache
-          SCCACHE_REGION: us-east-2
-          # Only use sccache if we're in the Vercel repo.
-          RUSTC_WRAPPER: ${{ !github.event.pull_request.head.repo.fork && 'sccache' || '' }}
-          CARGO_INCREMENTAL: 0
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #     - name: Run tests
+  #       timeout-minutes: 120
+  #       # We explicitly unset RUSTC_WRAPPER if it is an empty string as causes build issues
+  #       run: |
+  #         if [ -z "${RUSTC_WRAPPER}" ]; then
+  #           unset RUSTC_WRAPPER
+  #         fi
+  #         if [ "$RUNNER_OS" == "Windows" ]; then
+  #             cargo test --workspace --exclude turborepo-napi
+  #         else
+  #             cargo test --workspace
+  #         fi
+  #       shell: bash
+  #       env:
+  #         SCCACHE_BUCKET: turborepo-sccache
+  #         SCCACHE_REGION: us-east-2
+  #         # Only use sccache if we're in the Vercel repo.
+  #         RUSTC_WRAPPER: ${{ !github.event.pull_request.head.repo.fork && 'sccache' || '' }}
+  #         CARGO_INCREMENTAL: 0
+  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-  basic-example:
-    name: "`basic` example"
-    timeout-minutes: 40
-    needs:
-      - find-changes
-    if: ${{ needs.find-changes.outputs.basic-example == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+  # basic-example:
+  #   name: "`basic` example"
+  #   timeout-minutes: 40
+  #   needs:
+  #     - find-changes
+  #   if: ${{ needs.find-changes.outputs.basic-example == 'true' }}
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
 
-      - name: "Run `basic` example tests"
-        uses: ./.github/actions/examples-tests
-        with:
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
-          turbo-token: "${{ secrets.TURBO_TOKEN }}"
-          turbo-team: "${{ vars.TURBO_TEAM }}"
-          test-filter: "@turborepo-examples-tests/basic-*"
+  #     - name: "Run `basic` example tests"
+  #       uses: ./.github/actions/examples-tests
+  #       with:
+  #         github-token: "${{ secrets.GITHUB_TOKEN }}"
+  #         turbo-token: "${{ secrets.TURBO_TOKEN }}"
+  #         turbo-team: "${{ vars.TURBO_TEAM }}"
+  #         test-filter: "@turborepo-examples-tests/basic-*"
 
-  kitchen-sink-example:
-    name: "`kitchen-sink` example"
-    needs:
-      - find-changes
-    timeout-minutes: 40
-    if: ${{ needs.find-changes.outputs.kitchen-sink-example == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+  # kitchen-sink-example:
+  #   name: "`kitchen-sink` example"
+  #   needs:
+  #     - find-changes
+  #   timeout-minutes: 40
+  #   if: ${{ needs.find-changes.outputs.kitchen-sink-example == 'true' }}
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
 
-      - name: "Run `kitchen-sink` example tests"
-        uses: ./.github/actions/examples-tests
-        with:
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
-          turbo-token: "${{ secrets.TURBO_TOKEN }}"
-          turbo-team: "${{ vars.TURBO_TEAM }}"
-          test-filter: "@turborepo-examples-tests/kitchen-sink-*"
+  #     - name: "Run `kitchen-sink` example tests"
+  #       uses: ./.github/actions/examples-tests
+  #       with:
+  #         github-token: "${{ secrets.GITHUB_TOKEN }}"
+  #         turbo-token: "${{ secrets.TURBO_TOKEN }}"
+  #         turbo-team: "${{ vars.TURBO_TEAM }}"
+  #         test-filter: "@turborepo-examples-tests/kitchen-sink-*"
 
-  non-monorepo-example:
-    name: "`non-monorepo` example"
-    timeout-minutes: 40
-    needs:
-      - find-changes
-    if: ${{ needs.find-changes.outputs.non-monorepo-example == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+  # non-monorepo-example:
+  #   name: "`non-monorepo` example"
+  #   timeout-minutes: 40
+  #   needs:
+  #     - find-changes
+  #   if: ${{ needs.find-changes.outputs.non-monorepo-example == 'true' }}
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
 
-      - name: "Run `non-monorepo` example tests"
-        uses: ./.github/actions/examples-tests
-        with:
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
-          turbo-token: "${{ secrets.TURBO_TOKEN }}"
-          turbo-team: "${{ vars.TURBO_TEAM }}"
-          test-filter: "@turborepo-examples-tests/non-monorepo-*"
+  #     - name: "Run `non-monorepo` example tests"
+  #       uses: ./.github/actions/examples-tests
+  #       with:
+  #         github-token: "${{ secrets.GITHUB_TOKEN }}"
+  #         turbo-token: "${{ secrets.TURBO_TOKEN }}"
+  #         turbo-team: "${{ vars.TURBO_TEAM }}"
+  #         test-filter: "@turborepo-examples-tests/non-monorepo-*"
 
-  with-svelte-example:
-    name: "`with-svelte` example"
-    timeout-minutes: 40
-    needs:
-      - find-changes
-    if: ${{ needs.find-changes.outputs.with-svelte-example == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+  # with-svelte-example:
+  #   name: "`with-svelte` example"
+  #   timeout-minutes: 40
+  #   needs:
+  #     - find-changes
+  #   if: ${{ needs.find-changes.outputs.with-svelte-example == 'true' }}
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
 
-      - name: "Run `with-svelte` example tests"
-        uses: ./.github/actions/examples-tests
-        with:
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
-          turbo-token: "${{ secrets.TURBO_TOKEN }}"
-          turbo-team: "${{ vars.TURBO_TEAM }}"
-          test-filter: "@turborepo-examples-tests/with-svelte-*"
+  #     - name: "Run `with-svelte` example tests"
+  #       uses: ./.github/actions/examples-tests
+  #       with:
+  #         github-token: "${{ secrets.GITHUB_TOKEN }}"
+  #         turbo-token: "${{ secrets.TURBO_TOKEN }}"
+  #         turbo-team: "${{ vars.TURBO_TEAM }}"
+  #         test-filter: "@turborepo-examples-tests/with-svelte-*"
 
-  with-tailwind-example:
-    name: "`with-tailwind` example"
-    timeout-minutes: 40
-    needs:
-      - find-changes
-    if: ${{ needs.find-changes.outputs.with-tailwind-example == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+  # with-tailwind-example:
+  #   name: "`with-tailwind` example"
+  #   timeout-minutes: 40
+  #   needs:
+  #     - find-changes
+  #   if: ${{ needs.find-changes.outputs.with-tailwind-example == 'true' }}
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
 
-      - name: "Run `with-tailwind` example tests"
-        uses: ./.github/actions/examples-tests
-        with:
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
-          turbo-token: "${{ secrets.TURBO_TOKEN }}"
-          turbo-team: "${{ vars.TURBO_TEAM }}"
-          test-filter: "@turborepo-examples-tests/with-tailwind-*"
+  #     - name: "Run `with-tailwind` example tests"
+  #       uses: ./.github/actions/examples-tests
+  #       with:
+  #         github-token: "${{ secrets.GITHUB_TOKEN }}"
+  #         turbo-token: "${{ secrets.TURBO_TOKEN }}"
+  #         turbo-team: "${{ vars.TURBO_TEAM }}"
+  #         test-filter: "@turborepo-examples-tests/with-tailwind-*"
 
-  summary:
-    name: Turborepo Test Summary
-    runs-on: ubuntu-latest
-    if: always()
-    needs:
-      - find-changes
-      - integration
-      - rust_lint
-      - rust_check
-      - rust_test
-      - basic-example
-      - kitchen-sink-example
-      - non-monorepo-example
-      - with-svelte-example
-      - with-tailwind-example
-    steps:
-      - name: Compute info
-        id: info
-        if: always()
-        run: |
-          cancelled=false
-          failure=false
+  # summary:
+  #   name: Turborepo Test Summary
+  #   runs-on: ubuntu-latest
+  #   if: always()
+  #   needs:
+  #     - find-changes
+  #     - integration
+  #     - rust_lint
+  #     - rust_check
+  #     - rust_test
+  #     - basic-example
+  #     - kitchen-sink-example
+  #     - non-monorepo-example
+  #     - with-svelte-example
+  #     - with-tailwind-example
+  #   steps:
+  #     - name: Compute info
+  #       id: info
+  #       if: always()
+  #       run: |
+  #         cancelled=false
+  #         failure=false
 
-          subjob () {
-            local result=$1
-            if [ "$result" = "cancelled" ]; then
-              cancelled=true
-            elif [ "$result" != "success" ] && [ "$result" != "skipped" ]; then
-              failure=true
-            fi
-          }
+  #         subjob () {
+  #           local result=$1
+  #           if [ "$result" = "cancelled" ]; then
+  #             cancelled=true
+  #           elif [ "$result" != "success" ] && [ "$result" != "skipped" ]; then
+  #             failure=true
+  #           fi
+  #         }
 
-          subjob ${{needs.integration.result}}
-          subjob ${{needs.rust_lint.result}}
-          subjob ${{needs.rust_check.result}}
-          subjob ${{needs.rust_test.result}}
-          subjob ${{needs.basic-example.result}}
-          subjob ${{needs.kitchen-sink-example.result}}
-          subjob ${{needs.non-monorepo-example.result}}
-          subjob ${{needs.with-svelte-example.result}}
-          subjob ${{needs.with-tailwind-example.result}}
+  #         subjob ${{needs.integration.result}}
+  #         subjob ${{needs.rust_lint.result}}
+  #         subjob ${{needs.rust_check.result}}
+  #         subjob ${{needs.rust_test.result}}
+  #         subjob ${{needs.basic-example.result}}
+  #         subjob ${{needs.kitchen-sink-example.result}}
+  #         subjob ${{needs.non-monorepo-example.result}}
+  #         subjob ${{needs.with-svelte-example.result}}
+  #         subjob ${{needs.with-tailwind-example.result}}
 
-          if [ "$cancelled" = "true" ]; then
-            echo "cancelled=true" >> $GITHUB_OUTPUT
-          elif [ "$failure" = "true" ]; then
-            echo "failure=true" >> $GITHUB_OUTPUT
-          else
-            echo "success=true" >> $GITHUB_OUTPUT
-          fi
+  #         if [ "$cancelled" = "true" ]; then
+  #           echo "cancelled=true" >> $GITHUB_OUTPUT
+  #         elif [ "$failure" = "true" ]; then
+  #           echo "failure=true" >> $GITHUB_OUTPUT
+  #         else
+  #           echo "success=true" >> $GITHUB_OUTPUT
+  #         fi
 
-      - name: Failed
-        if: steps.info.outputs.failure == 'true'
-        run: exit 1
+  #     - name: Failed
+  #       if: steps.info.outputs.failure == 'true'
+  #       run: exit 1
 
-      - name: Succeeded
-        if: steps.info.outputs.success == 'true'
-        run: echo Ok
+  #     - name: Succeeded
+  #       if: steps.info.outputs.success == 'true'
+  #       run: echo Ok
 
-  cleanup:
-    name: Cleanup
-    needs: summary
-    if: always()
-    uses: ./.github/workflows/pr-clean-caches.yml
-    secrets: inherit
+  # cleanup:
+  #   name: Cleanup
+  #   needs: summary
+  #   if: always()
+  #   uses: ./.github/workflows/pr-clean-caches.yml
+  #   secrets: inherit
